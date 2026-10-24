@@ -1,0 +1,8 @@
+{
+  "name": "Remix MediTrack 360",
+  "description": "Smart Medicine Expiry \u0026 Stock Tracker for small clinics and rural pharmacies with FEFO recommendations, real-time alerts, and offline reliability.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
