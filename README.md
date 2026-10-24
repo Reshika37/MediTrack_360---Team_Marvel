@@ -1,6 +1,11 @@
 MediTrack 360 🩺🤖
 
-AI-Powered Healthcare Tracking and Management Platform
+🌐 Live Demo
+
+Try MediTrack 360 here: https://remix-meditrack-360-3992.ai.studio
+
+Explore our AI-powered healthcare tracking and management platform!
+
 
 MediTrack 360 is an AI-powered healthcare platform developed using Google AI Studio and Google Gemini. It aims to simplify health monitoring, organize medical records, and provide AI-assisted health insights through a user-friendly interface.
 
