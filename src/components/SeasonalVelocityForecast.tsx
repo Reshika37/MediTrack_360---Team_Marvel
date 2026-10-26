@@ -644,17 +644,21 @@ export const SeasonalVelocityForecast: React.FC<SeasonalVelocityForecastProps> =
                 </div>
 
                 <button
-                  onClick={() =>
-                    setIndentModalMed({
-                      med: selectedMedObj,
-                      suggestedQty: selectedProfile.recommendedOrderBuffer,
-                      reason: `${activeSeasonConfig.title} Surge Indent`
-                    })
-                  }
-                  className="px-4 py-2 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-bold text-xs shrink-0 flex items-center gap-1.5 transition cursor-pointer shadow-md"
+                  onClick={() => {
+                    if (onGenerateIndent && selectedMedObj) {
+                      onGenerateIndent(selectedMedObj, selectedProfile.recommendedOrderBuffer);
+                    } else {
+                      setIndentModalMed({
+                        med: selectedMedObj,
+                        suggestedQty: selectedProfile.recommendedOrderBuffer,
+                        reason: `${activeSeasonConfig.title} Surge Indent`
+                      });
+                    }
+                  }}
+                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-orange-600 to-indigo-600 hover:from-orange-500 hover:to-indigo-500 text-white font-bold text-xs shrink-0 flex items-center gap-1.5 transition cursor-pointer shadow-md"
                 >
                   <FileText className="w-3.5 h-3.5" />
-                  <span>Generate Seasonal Indent (+{selectedProfile.recommendedOrderBuffer})</span>
+                  <span>Launch AI Restock Assistant (+{selectedProfile.recommendedOrderBuffer})</span>
                 </button>
               </div>
             </div>

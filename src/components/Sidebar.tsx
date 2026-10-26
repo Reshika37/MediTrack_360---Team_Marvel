@@ -10,7 +10,8 @@ import {
   Building,
   Sparkles,
   Mic,
-  TrendingDown
+  TrendingDown,
+  PackagePlus
 } from 'lucide-react';
 import { DashboardData } from '../types/index.ts';
 
@@ -71,6 +72,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
       icon: TrendingDown,
       badge: 'Epidemic AI',
       badgeColor: 'bg-emerald-600'
+    },
+    {
+      id: 'restock',
+      label: 'AI Restock Assistant',
+      icon: PackagePlus,
+      badge: 'ROP Engine',
+      badgeColor: 'bg-indigo-600'
     },
     {
       id: 'reports',

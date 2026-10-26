@@ -62,17 +62,59 @@ export const VoiceConversationView: React.FC<VoiceConversationViewProps> = ({
   const [thinkingLevel, setThinkingLevel] = useState<'HIGH' | 'MEDIUM'>('HIGH');
   const [voicePersona, setVoicePersona] = useState<string>('Kore');
   const [handsFreeMode, setHandsFreeMode] = useState<boolean>(true);
+  const [autoSendVoice, setAutoSendVoice] = useState<boolean>(true);
+  const [isAutoSending, setIsAutoSending] = useState<boolean>(false);
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
   const [activeAudioMessageId, setActiveAudioMessageId] = useState<string | null>(null);
   const [expandedReasoningIds, setExpandedReasoningIds] = useState<Record<string, boolean>>({ 'welcome-1': true });
   const [executingActionId, setExecutingActionId] = useState<string | null>(null);
   const [actionSuccessNotice, setActionSuccessNotice] = useState<string | null>(null);
 
-  // Audio References
+  // Audio & Voice References
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const recognitionRef = useRef<any>(null);
   const chatBottomRef = useRef<HTMLDivElement>(null);
   const handsFreeTimerRef = useRef<any>(null);
+  const silenceTimerRef = useRef<any>(null);
+  const latestTranscriptRef = useRef<string>('');
+  const isAutoSendingRef = useRef<boolean>(false);
+  const autoSendVoiceRef = useRef<boolean>(true);
+  const handleSendMessageRef = useRef<(textToSend?: string) => Promise<void>>(() => Promise.resolve());
+
+  useEffect(() => {
+    autoSendVoiceRef.current = autoSendVoice;
+  }, [autoSendVoice]);
+
+  // Trigger auto-send voice query immediately when user pauses speaking
+  const triggerAutoSend = () => {
+    if (silenceTimerRef.current) {
+      clearTimeout(silenceTimerRef.current);
+      silenceTimerRef.current = null;
+    }
+    if (isAutoSendingRef.current) return;
+    const query = latestTranscriptRef.current.trim();
+    if (!query) return;
+
+    if (!autoSendVoiceRef.current) return;
+
+    isAutoSendingRef.current = true;
+    setIsAutoSending(true);
+
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+      } catch {}
+    }
+    setIsListening(false);
+
+    // Provide a brief 200ms visual confirmation that speech was captured and is transmitting
+    setTimeout(() => {
+      setIsAutoSending(false);
+      handleSendMessageRef.current(query);
+      latestTranscriptRef.current = '';
+      isAutoSendingRef.current = false;
+    }, 200);
+  };
 
   // Initialize Speech Recognition
   useEffect(() => {
@@ -87,13 +129,26 @@ export const VoiceConversationView: React.FC<VoiceConversationViewProps> = ({
 
       recognition.onstart = () => {
         setIsListening(true);
+        isAutoSendingRef.current = false;
+        setIsAutoSending(false);
       };
 
       recognition.onresult = (event: any) => {
         const transcript = Array.from(event.results)
           .map((result: any) => result[0].transcript)
           .join('');
+        latestTranscriptRef.current = transcript;
         setInputText(transcript);
+
+        // Reset silence pause detection timer (auto-sends after 1s pause)
+        if (autoSendVoiceRef.current && transcript.trim()) {
+          if (silenceTimerRef.current) {
+            clearTimeout(silenceTimerRef.current);
+          }
+          silenceTimerRef.current = setTimeout(() => {
+            triggerAutoSend();
+          }, 1000);
+        }
       };
 
       recognition.onerror = (event: any) => {
@@ -103,6 +158,10 @@ export const VoiceConversationView: React.FC<VoiceConversationViewProps> = ({
 
       recognition.onend = () => {
         setIsListening(false);
+        // If voice input has content and was not already sent by the silence timer, auto-send now
+        if (autoSendVoiceRef.current && latestTranscriptRef.current.trim() && !isAutoSendingRef.current) {
+          triggerAutoSend();
+        }
       };
 
       recognitionRef.current = recognition;
@@ -119,6 +178,9 @@ export const VoiceConversationView: React.FC<VoiceConversationViewProps> = ({
       }
       if (handsFreeTimerRef.current) {
         clearTimeout(handsFreeTimerRef.current);
+      }
+      if (silenceTimerRef.current) {
+        clearTimeout(silenceTimerRef.current);
       }
     };
   }, []);
@@ -210,7 +272,7 @@ export const VoiceConversationView: React.FC<VoiceConversationViewProps> = ({
   // Toggle mic
   const toggleListening = () => {
     if (isListening) {
-      stopListening();
+      stopListening(true);
     } else {
       startListening();
     }
@@ -218,6 +280,14 @@ export const VoiceConversationView: React.FC<VoiceConversationViewProps> = ({
 
   const startListening = () => {
     stopAudio();
+    latestTranscriptRef.current = '';
+    isAutoSendingRef.current = false;
+    setIsAutoSending(false);
+    if (silenceTimerRef.current) {
+      clearTimeout(silenceTimerRef.current);
+      silenceTimerRef.current = null;
+    }
+
     if (recognitionRef.current) {
       try {
         recognitionRef.current.start();
@@ -228,22 +298,39 @@ export const VoiceConversationView: React.FC<VoiceConversationViewProps> = ({
     }
   };
 
-  const stopListening = () => {
+  const stopListening = (sendIfPresent = true) => {
+    if (silenceTimerRef.current) {
+      clearTimeout(silenceTimerRef.current);
+      silenceTimerRef.current = null;
+    }
+
     if (recognitionRef.current) {
       try {
         recognitionRef.current.stop();
       } catch {}
     }
     setIsListening(false);
+
+    if (sendIfPresent && autoSendVoiceRef.current && latestTranscriptRef.current.trim() && !isAutoSendingRef.current) {
+      triggerAutoSend();
+    }
   };
 
   // Send message to voice assistant
   const handleSendMessage = async (textToSend?: string) => {
+    if (silenceTimerRef.current) {
+      clearTimeout(silenceTimerRef.current);
+      silenceTimerRef.current = null;
+    }
+
     const query = (textToSend || inputText).trim();
     if (!query) return;
 
-    stopListening();
+    stopListening(false);
     setInputText('');
+    latestTranscriptRef.current = '';
+    isAutoSendingRef.current = false;
+    setIsAutoSending(false);
 
     const userMsgId = 'user-' + Date.now();
     const newUserMsg: VoiceMessage = {
@@ -488,6 +575,24 @@ export const VoiceConversationView: React.FC<VoiceConversationViewProps> = ({
               <span>Hands-Free Dialog</span>
             </button>
 
+            <div className="h-4 w-px bg-slate-700" />
+
+            {/* Auto-Send Voice Toggle */}
+            <button
+              onClick={() => setAutoSendVoice(!autoSendVoice)}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded text-[11px] font-semibold transition cursor-pointer ${
+                autoSendVoice
+                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                  : 'bg-slate-700/60 text-slate-400 border border-slate-700'
+              }`}
+              title="Automatically send voice commands upon pausing without needing to press the send button"
+            >
+              <Sparkles className={`w-3 h-3 ${autoSendVoice ? 'text-amber-400 animate-pulse' : 'text-slate-500'}`} />
+              <span>Auto-Send: {autoSendVoice ? 'ON' : 'OFF'}</span>
+            </button>
+
+            <div className="h-4 w-px bg-slate-700" />
+
             {/* Sound Mute Toggle */}
             <button
               onClick={() => {
@@ -600,18 +705,22 @@ export const VoiceConversationView: React.FC<VoiceConversationViewProps> = ({
         </div>
 
         <p className="text-xs font-semibold text-slate-200">
-          {isListening
-            ? 'Listening to your clinical voice command... (Click again or pause to send)'
+          {isAutoSending
+            ? '🚀 Voice command captured — Auto-sending to MediTrack AI now...'
+            : isListening
+            ? inputText
+              ? `🎙️ Hearing: "${inputText}" (Will auto-send automatically on pause...)`
+              : '🎙️ Listening... Speak your clinical command (sends automatically on pause)'
             : isThinking
             ? 'Engaging High Thinking reasoning across live formulary...'
             : activeAudioMessageId
             ? 'Speaking clinical guidance...'
-            : 'Click microphone or spacebar to speak hands-free'}
+            : 'Click microphone to speak hands-free (auto-sends without clicking send)'}
         </p>
         <p className="text-[11px] text-slate-400 mt-0.5">
-          {handsFreeMode
-            ? 'Hands-free dialogue active: Assistant will listen again after answering'
-            : 'Push-to-talk mode active'}
+          {autoSendVoice
+            ? '⚡ Auto-Send Active: speak your command, assistant auto-transmits without pressing send'
+            : 'Manual send: press send button after speaking'}
         </p>
 
         {/* Evaluator Quick Voice Prompts (1-Click Testing without Mic) */}
@@ -842,6 +951,33 @@ export const VoiceConversationView: React.FC<VoiceConversationViewProps> = ({
 
         {/* Input Bar */}
         <div className="pt-2">
+          {/* Real-time Voice Capture Feedback */}
+          {isAutoSending && (
+            <div className="mb-2 px-3.5 py-2 rounded-xl bg-orange-500/20 border border-orange-500/40 text-orange-200 text-xs flex items-center justify-between animate-pulse">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-3.5 h-3.5 text-orange-400 animate-spin" />
+                <span className="font-semibold">Voice command captured: automatically transmitting to MediTrack AI...</span>
+              </div>
+              <span className="text-[10px] text-orange-300 font-mono bg-orange-500/30 px-2 py-0.5 rounded">
+                Sending automatically
+              </span>
+            </div>
+          )}
+
+          {isListening && inputText && !isAutoSending && (
+            <div className="mb-2 px-3 py-1.5 rounded-xl bg-slate-800/90 border border-orange-500/30 text-slate-200 text-xs flex items-center justify-between">
+              <div className="flex items-center gap-2 truncate">
+                <span className="w-2 h-2 rounded-full bg-red-500 animate-ping shrink-0" />
+                <span className="text-slate-400 truncate">
+                  Hearing: <strong className="text-white font-medium">"{inputText}"</strong>
+                </span>
+              </div>
+              <span className="text-[10px] text-orange-400 font-mono shrink-0 pl-2">
+                Auto-sends on pause (~1s)
+              </span>
+            </div>
+          )}
+
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -854,7 +990,11 @@ export const VoiceConversationView: React.FC<VoiceConversationViewProps> = ({
                 type="text"
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
-                placeholder="Speak hands-free or type a clinical inquiry (e.g., 'Which Paracetamol batch expires first?')..."
+                placeholder={
+                  isListening
+                    ? "Listening... Speak your command (auto-sends when you pause)..."
+                    : "Speak hands-free (auto-sends on pause) or type a clinical inquiry..."
+                }
                 className="w-full px-4 py-3 bg-slate-800/90 border border-slate-700 rounded-xl text-xs sm:text-sm text-white placeholder-slate-400 focus:outline-hidden focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition"
               />
               {inputText && (
@@ -876,7 +1016,7 @@ export const VoiceConversationView: React.FC<VoiceConversationViewProps> = ({
                   ? 'bg-red-600 text-white border-red-500 animate-pulse'
                   : 'bg-slate-800 text-orange-400 hover:text-orange-300 border-slate-700'
               }`}
-              title={isListening ? 'Stop listening' : 'Start voice input'}
+              title={isListening ? 'Click to stop & auto-send now' : 'Click to speak (auto-sends without pressing Send)'}
             >
               {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
             </button>

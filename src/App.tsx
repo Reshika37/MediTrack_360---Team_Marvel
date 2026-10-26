@@ -12,6 +12,7 @@ import { ReportsView } from './components/ReportsView.tsx';
 import { SettingsView } from './components/SettingsView.tsx';
 import { VoiceConversationView } from './components/VoiceConversationView.tsx';
 import { SeasonalVelocityForecast } from './components/SeasonalVelocityForecast.tsx';
+import { AIRestockAssistant } from './components/AIRestockAssistant.tsx';
 import { useOnlineStatus } from './hooks/useOnlineStatus.ts';
 import { api } from './services/api.ts';
 import { Medicine, DashboardData, StockMovement, AlertItem, User } from './types/index.ts';
@@ -318,6 +319,21 @@ export default function App() {
                 <SeasonalVelocityForecast
                   medicines={medicines}
                   onOpenStockModal={handleOpenStockModal}
+                  onGenerateIndent={(med) => {
+                    setSelectedMedicineId(med.id);
+                    setCurrentTab('restock');
+                  }}
+                />
+              )}
+
+              {currentTab === 'restock' && (
+                <AIRestockAssistant
+                  medicines={medicines}
+                  user={user}
+                  clinicName={clinicName}
+                  onRefreshData={() => loadData(!isOnline)}
+                  onNavigateTab={setCurrentTab}
+                  preselectedMedicineId={selectedMedicineId}
                 />
               )}
 

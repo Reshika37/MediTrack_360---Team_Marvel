@@ -323,5 +323,51 @@ export const api = {
       throw new Error(`TTS request failed: ${res.statusText}`);
     }
     return res.json();
+  },
+
+  async getRestockAnalysis(
+    payload: { leadTimeDays?: number; supplierName?: string; season?: string; refreshAI?: boolean },
+    signal?: AbortSignal
+  ) {
+    const res = await fetch('/api/ai/restock-analysis', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      signal
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || `Restock analysis failed: ${res.statusText}`);
+    }
+    return res.json();
+  },
+
+  async dispatchPurchaseIndent(payload: {
+    requisitionId: string;
+    supplierName: string;
+    leadTimeDays: number;
+    season: string;
+    items: any[];
+    staffName?: string;
+    executiveSummary?: string;
+    autoReceive?: boolean;
+  }) {
+    const res = await fetch('/api/restock/dispatch-indent', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      throw new Error(`Dispatch purchase indent failed: ${res.statusText}`);
+    }
+    return res.json();
+  },
+
+  async getPurchaseIndents() {
+    const res = await fetch('/api/restock/indents');
+    if (!res.ok) {
+      throw new Error(`Failed to load indents: ${res.statusText}`);
+    }
+    return res.json();
   }
 };

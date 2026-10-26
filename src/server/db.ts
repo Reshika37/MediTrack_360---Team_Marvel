@@ -84,6 +84,23 @@ export function initDatabase() {
     );
   `);
 
+  // Purchase Indents table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS purchase_indents (
+      id TEXT PRIMARY KEY,
+      supplier_name TEXT NOT NULL,
+      lead_time_days INTEGER NOT NULL,
+      season TEXT NOT NULL,
+      total_items INTEGER NOT NULL,
+      total_cost REAL NOT NULL,
+      items_json TEXT NOT NULL,
+      executive_summary TEXT,
+      staff_name TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'DISPATCHED',
+      created_at TEXT NOT NULL
+    );
+  `);
+
   // Seed default data if users table is empty
   const userCount = (db.prepare('SELECT COUNT(*) as count FROM users').get() as { count: number }).count;
   if (userCount === 0) {

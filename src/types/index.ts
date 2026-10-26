@@ -113,3 +113,44 @@ export interface VoiceMessage {
   actionExecuted?: boolean;
   timestamp: string;
 }
+
+export interface RestockItem {
+  medicineId: number;
+  name: string;
+  genericName: string;
+  category: string;
+  unit: string;
+  currentUsableStock: number;
+  expiredStock: number;
+  minimumStock: number;
+  dailyVelocity: number;
+  seasonalMultiplier: number;
+  effectiveVelocity: number;
+  leadTimeDays: number;
+  leadTimeDemand: number; // velocity * leadTime
+  reorderPoint: number; // leadTimeDemand + minimumStock
+  daysOfSupply: number; // currentUsableStock / effectiveVelocity
+  urgency: 'CRITICAL' | 'WARNING' | 'HEALTHY' | 'SURPLUS';
+  suggestedReorderQty: number;
+  orderQty: number;
+  packSize: number;
+  unitCostEst: number;
+  totalCostEst: number;
+  selected: boolean;
+  clinicalRationale: string;
+}
+
+export interface RestockPlanResponse {
+  leadTimeDays: number;
+  supplierName: string;
+  season: string;
+  executiveSummary: string;
+  totalRequisitionCost: number;
+  criticalItemsCount: number;
+  warningItemsCount: number;
+  healthyItemsCount: number;
+  items: RestockItem[];
+  requisitionId: string;
+  procurementDirectives: string[];
+  isAlgorithmicFallback?: boolean;
+}

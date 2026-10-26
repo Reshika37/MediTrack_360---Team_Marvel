@@ -16,7 +16,9 @@ import {
   Layers,
   Mic,
   Brain,
-  Sparkles
+  Sparkles,
+  PackagePlus,
+  Truck
 } from 'lucide-react';
 import { DashboardData, Medicine } from '../types/index.ts';
 import { DashboardVelocitySection } from './BurnRateMiniChart.tsx';
@@ -80,12 +82,19 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
         <div className="flex items-center gap-2 flex-wrap">
           <button
-            onClick={() => onNavigate('voice-assistant')}
-            className="px-3.5 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold text-xs rounded-xl shadow-md shadow-purple-600/30 flex items-center gap-2 transition cursor-pointer"
+            onClick={() => onNavigate('restock')}
+            className="px-3.5 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold text-xs rounded-xl shadow-md shadow-indigo-600/30 flex items-center gap-2 transition cursor-pointer"
           >
-            <Mic className="w-3.5 h-3.5 animate-pulse text-purple-200" />
+            <PackagePlus className="w-3.5 h-3.5 text-indigo-200" />
+            <span>AI Restock Assistant</span>
+            <span className="text-[10px] px-1.5 py-0.2 rounded bg-white/20 font-bold">ROP Engine</span>
+          </button>
+          <button
+            onClick={() => onNavigate('voice-assistant')}
+            className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-purple-300 font-semibold text-xs rounded-xl border border-purple-500/30 flex items-center gap-2 transition cursor-pointer"
+          >
+            <Mic className="w-3.5 h-3.5 text-purple-400" />
             <span>Voice Assistant</span>
-            <span className="text-[10px] px-1.5 py-0.2 rounded bg-white/20 font-bold">High Thinking</span>
           </button>
           <button
             onClick={() => onNavigate('stock')}
@@ -103,35 +112,73 @@ export const Dashboard: React.FC<DashboardProps> = ({
         </div>
       </div>
 
-      {/* Voice Assistant & High Thinking Quick Banner */}
-      <div
-        onClick={() => onNavigate('voice-assistant')}
-        className="bg-gradient-to-r from-purple-950/40 via-slate-900 to-orange-950/30 border border-purple-500/30 hover:border-purple-500/60 p-4 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 transition cursor-pointer group shadow-lg"
-      >
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-300 border border-purple-500/40 flex items-center justify-center shrink-0 group-hover:scale-105 transition">
-            <Mic className="w-5 h-5 text-purple-400 animate-pulse" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-white group-hover:text-purple-300 transition flex items-center gap-1.5">
-                <Brain className="w-3.5 h-3.5 text-purple-400" />
-                Hands-Free Voice Conversation with High Thinking
-              </span>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 font-bold">
-                ThinkingLevel.HIGH
-              </span>
+      {/* Quick Access Banners: Voice Assistant & AI Restock Assistant */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        {/* Banner 1: Voice Assistant */}
+        <div
+          onClick={() => onNavigate('voice-assistant')}
+          className="bg-gradient-to-r from-purple-950/40 via-slate-900 to-slate-900 border border-purple-500/30 hover:border-purple-500/60 p-4 rounded-2xl flex flex-col justify-between gap-3 transition cursor-pointer group shadow-lg"
+        >
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-300 border border-purple-500/40 flex items-center justify-center shrink-0 group-hover:scale-105 transition">
+              <Mic className="w-5 h-5 text-purple-400 animate-pulse" />
             </div>
-            <p className="text-[11px] text-slate-400 mt-0.5">
-              Dispense medicines hands-free, verify earliest expiring batches, and receive natural voice answers backed by multi-step clinical reasoning.
-            </p>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-white group-hover:text-purple-300 transition flex items-center gap-1.5">
+                  <Brain className="w-3.5 h-3.5 text-purple-400" />
+                  Voice Assistant (High Thinking)
+                </span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 font-bold">
+                  ThinkingLevel.HIGH
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-400 mt-0.5">
+                Hands-free dispensing, earliest expiry queries, and clinical verification via Gemini 3.8 Flash.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between pt-1 border-t border-purple-500/10">
+            <span className="text-[10px] text-purple-400 font-semibold">Gemini 3.8 Flash-Lite TTS</span>
+            <span className="text-xs text-purple-300 font-semibold flex items-center gap-1 group-hover:translate-x-0.5 transition">
+              Launch Voice Flow <ArrowRight className="w-3.5 h-3.5" />
+            </span>
           </div>
         </div>
 
-        <button className="px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold flex items-center gap-1.5 transition shrink-0 shadow-md">
-          <span>Start Voice Conversation</span>
-          <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition" />
-        </button>
+        {/* Banner 2: AI Restock Assistant */}
+        <div
+          onClick={() => onNavigate('restock')}
+          className="bg-gradient-to-r from-indigo-950/40 via-slate-900 to-slate-900 border border-indigo-500/30 hover:border-indigo-500/60 p-4 rounded-2xl flex flex-col justify-between gap-3 transition cursor-pointer group shadow-lg"
+        >
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-xl bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 flex items-center justify-center shrink-0 group-hover:scale-105 transition">
+              <PackagePlus className="w-5 h-5 text-indigo-400 group-hover:scale-110 transition" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-white group-hover:text-indigo-300 transition flex items-center gap-1.5">
+                  <Truck className="w-3.5 h-3.5 text-indigo-400" />
+                  AI Restock Assistant & ROP Engine
+                </span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-bold">
+                  $ROP = d \times L + SS$
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-400 mt-0.5">
+                Automated reorder quantities adjusted for supplier lead times (3d-14d) and epidemic surge demand.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between pt-1 border-t border-indigo-500/10">
+            <span className="text-[10px] text-indigo-400 font-semibold">One-Click Purchase Indent</span>
+            <span className="text-xs text-indigo-300 font-semibold flex items-center gap-1 group-hover:translate-x-0.5 transition">
+              View Reorder Plan <ArrowRight className="w-3.5 h-3.5" />
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* 1. Four Summary Cards */}
